@@ -29,24 +29,28 @@ object Parser:
   case class Ast(nodes: List[Node]) extends Stmt
   case class StmtEcho(exprs: List[Expr]) extends Stmt
 
-  val code: String = """<?php echo 1.1 - 2 + true * 5; """
+  val code: String = """<?php echo (1.1 - 2) + true * 5; """
 
-  trait ExpressionParser extends RegexParsers:
-    def expr: Parser[Expr] = "(" ~> exprBin <~ ")" | exprBin | exprNonBin
-    def exprBin = exprSum
-    def exprNonBin = exprScalar
+  object RegCond:
+    val int = "[0-9]+".r
+    val float = """[0-9]+\.[0-9]*""".r
 
-    def exprScalar = exprBool | exprFloat| exprInt
-    def exprBool = ("true" | "false") ^^ { (s: String) => ExprBool(s == "true")}
-    def exprInt = "[0-9]+".r ^^ { (s) => ExprInt(s.toInt)}
-    def exprFloat = """[0-9]+\.[0-9]*""".r ^^ { (s) => ExprFloat(s.toFloat)}
+  trait ScalarParser  extends RegexParsers:
+    def scalar = bool | float | int
+    def bool = ("true" | "false") ^^ { (s: String) => ExprBool(s == "true")}
+    def int = RegCond.int ^^ { (s) => ExprInt(s.toInt)}
+    def float = RegCond.float ^^ { (s) => ExprFloat(s.toFloat)}
 
-    def exprSum = chainl1(exprMul, "+" ^^^ { ExprAdd(_, _) } | "-" ^^^ { ExprSub(_, _) })
-    def exprMul = chainl1(exprNonBin, "*" ^^^ { ExprMul(_, _) })
+  trait ExpressionParser extends RegexParsers with ScalarParser:
+    def expr: Parser[Expr] = bin | scalar
+    def bin: Parser[Expr] = sum | mul
+    def sum: Parser[Expr] = chainl1(mul, "+" ^^^ { ExprAdd(_, _) } | "-" ^^^ { ExprSub(_, _) })
+    def mul: Parser[Expr] = chainl1(brackets, "*" ^^^ { ExprMul(_, _) })
+    def brackets = scalar | "(" ~> bin <~ ")"
 
   trait StatementParser extends ExpressionParser:
-    def stmt: Parser[Stmt] = stmtEcho
-    def stmtEcho: Parser[StmtEcho] = "echo" ~> rep(expr) <~ ";" ^^ { case exprs => StmtEcho(exprs) }
+    def stmt: Parser[Stmt] = echo
+    def echo: Parser[StmtEcho] = "echo" ~> repsep(expr, ",") <~ ";" ^^ { case exprs => StmtEcho(exprs) }
 
   object AstParser extends RegexParsers with StatementParser:
     def ast: Parser[Ast] = "<?php" ~> rep(stmt) <~ opt("?>") ^^ { case stmts => Ast(stmts)}
