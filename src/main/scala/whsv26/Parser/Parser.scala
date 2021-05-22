@@ -45,6 +45,10 @@ object Parser:
     case class ExprEqualStrict(lhs: Expr, rhs: Expr) extends Expr
     case class ExprNotEqual(lhs: Expr, rhs: Expr) extends Expr
     case class ExprNotEqualStrict(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprLte(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprLt(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprGte(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprGt(lhs: Expr, rhs: Expr) extends Expr
     case class ExprAdd(lhs: Expr, rhs: Expr) extends Expr
     case class ExprSub(lhs: Expr, rhs: Expr) extends Expr
     case class ExprMul(lhs: Expr, rhs: Expr) extends Expr
@@ -59,12 +63,17 @@ object Parser:
         "===" ^^^ { ExprEqualStrict(_, _) } |
         "=="  ^^^ { ExprEqual(_, _) })
       def p2: Parser[Expr] = chainl1(p3,
+        "<=" ^^^ { ExprLte(_, _) } |
+        "<"  ^^^ { ExprLt(_, _) } |
+        ">=" ^^^ { ExprGte(_, _) } |
+        ">"  ^^^ { ExprGt(_, _) })
+      def p3: Parser[Expr] = chainl1(p4,
         "+"   ^^^ { ExprAdd(_, _) } |
         "-"   ^^^ { ExprSub(_, _) })
-      def p3: Parser[Expr] = chainl1(p4,
+      def p4: Parser[Expr] = chainl1(p5,
         "*"   ^^^ { ExprMul(_, _) } |
         "%"   ^^^ { ExprMod(_, _) })
-      def p4 = scalar | "(" ~> bin <~ ")"
+      def p5 = scalar | "(" ~> bin <~ ")"
 
   import BinOps.*
 
