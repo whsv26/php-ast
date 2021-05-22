@@ -2,7 +2,6 @@ package whsv26.Parser
 
 import sys.process._
 import whsv26.Lexer.Token.PhpToken
-import whsv26.Parser.Parser.{ExprAdd, Node}
 import whsv26.Parser.Parser.AstParser.{expr, rep}
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
@@ -15,18 +14,6 @@ object Parser:
   sealed trait Expr extends Node
 
   // Expressions
-  case class ExprBool(r: Boolean) extends Expr
-  case class ExprInt(r: Int) extends Expr
-  case class ExprFloat(r: Float) extends Expr
-  case class ExprString(r: String) extends Expr
-
-  case class ExprEqual(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprEqualStrict(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprAdd(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprSub(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprMul(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
-  case class ExprDiv(lhs: Expr, rhs: Expr) extends Expr
   case class ExprRaw(r: String) extends Expr
 
   // Statements
@@ -39,25 +26,47 @@ object Parser:
     val float = """[0-9]+\.[0-9]*""".r
     val string = """('|").*?('|")""".r
 
-  trait ScalarParser  extends RegexParsers:
-    def scalar = bool | float | int | string
-    def bool = ("true" | "false") ^^ { (s: String) => ExprBool(s == "true")}
-    def int = RegCond.int ^^ { (s) => ExprInt(s.toInt)}
-    def float = RegCond.float ^^ { (s) => ExprFloat(s.toFloat)}
-    def string = RegCond.string ^^ { (s) => ExprString(s.toString)}
+  object Scalar:
+    case class ExprBool(r: Boolean) extends Expr
+    case class ExprInt(r: Int) extends Expr
+    case class ExprFloat(r: Float) extends Expr
+    case class ExprString(r: String) extends Expr
 
-  trait BinOpsParser extends ScalarParser:
-    def bin: Parser[Expr] = p1 | p4
-    def p1: Parser[Expr] = chainl1(p2,
-      "=="  ^^^ { ExprEqual(_, _) } |
-      "===" ^^^ { ExprEqualStrict(_, _) })
-    def p2: Parser[Expr] = chainl1(p3,
-      "+"   ^^^ { ExprAdd(_, _) } |
-      "-"   ^^^ { ExprSub(_, _) })
-    def p3: Parser[Expr] = chainl1(p4,
-      "*"   ^^^ { ExprMul(_, _) } |
-      "%"   ^^^ { ExprMod(_, _) })
-    def p4 = scalar | "(" ~> bin <~ ")"
+    trait ScalarParser  extends RegexParsers:
+      def scalar = bool | float | int | string
+      def bool = ("true" | "false") ^^ { (s: String) => ExprBool(s == "true")}
+      def int = RegCond.int ^^ { (s) => ExprInt(s.toInt)}
+      def float = RegCond.float ^^ { (s) => ExprFloat(s.toFloat)}
+      def string = RegCond.string ^^ { (s) => ExprString(s.toString)}
+
+  object BinOps:
+    import Scalar.*
+    case class ExprEqual(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprEqualStrict(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprNotEqual(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprNotEqualStrict(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprAdd(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprSub(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprMul(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprDiv(lhs: Expr, rhs: Expr) extends Expr
+
+    trait BinOpsParser extends ScalarParser:
+      def bin: Parser[Expr] = p1 | p4
+      def p1: Parser[Expr] = chainl1(p2,
+        "!==" ^^^ { ExprNotEqualStrict(_, _) } |
+        "!="  ^^^ { ExprNotEqual(_, _) } |
+        "===" ^^^ { ExprEqualStrict(_, _) } |
+        "=="  ^^^ { ExprEqual(_, _) })
+      def p2: Parser[Expr] = chainl1(p3,
+        "+"   ^^^ { ExprAdd(_, _) } |
+        "-"   ^^^ { ExprSub(_, _) })
+      def p3: Parser[Expr] = chainl1(p4,
+        "*"   ^^^ { ExprMul(_, _) } |
+        "%"   ^^^ { ExprMod(_, _) })
+      def p4 = scalar | "(" ~> bin <~ ")"
+
+  import BinOps.*
 
   trait ExpressionParser extends BinOpsParser:
     def expr: Parser[Expr] = bin | scalar
