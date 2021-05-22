@@ -3,6 +3,8 @@ package whsv26.Parser
 import sys.process._
 import whsv26.Lexer.Token.PhpToken
 import whsv26.Parser.Parser.AstParser.{expr, rep}
+import whsv26.Parser.Parser.Expr
+
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
 import scala.util.parsing.input.Reader
@@ -41,6 +43,7 @@ object Parser:
 
   object BinOps:
     import Scalar.*
+    case class ExprTernCond(cond: Expr, lhs: Expr, rhs: Expr) extends Expr
     case class ExprAnd(lhs: Expr, rhs: Expr) extends Expr
     case class ExprOr(lhs: Expr, rhs: Expr) extends Expr
     case class ExprNotEqualStrict(lhs: Expr, rhs: Expr) extends Expr
@@ -58,33 +61,35 @@ object Parser:
     case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
 
     trait OpsParser extends ScalarParser:
-      def bin: Parser[Expr] = p1 | p4
-      def p1: Parser[Expr] = chainl1(p2,
-        "&&" ^^^ { ExprAnd(_, _) } |
-        "||"  ^^^ { ExprOr(_, _) })
-      def p2: Parser[Expr] = chainl1(p3,
+      def ops: Parser[Expr] = tern | bin
+      def tern: Parser[Expr] = t1
+      def t1: Parser[Expr] = (mpr <~ "?") ~ (mpr <~ ":") ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
+      def bin: Parser[Expr] = b2
+      def b2: Parser[Expr] = chainl1(b3, "||" ^^^ { ExprOr(_, _) })
+      def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ { ExprAnd(_, _) })
+      def b4: Parser[Expr] = chainl1(b5,
         "!==" ^^^ { ExprNotEqualStrict(_, _) } |
         "!="  ^^^ { ExprNotEqual(_, _) } |
         "===" ^^^ { ExprEqualStrict(_, _) } |
         "=="  ^^^ { ExprEqual(_, _) })
-      def p3: Parser[Expr] = chainl1(p4,
-        "<=" ^^^ { ExprLte(_, _) } |
-        "<"  ^^^ { ExprLt(_, _) } |
-        ">=" ^^^ { ExprGte(_, _) } |
-        ">"  ^^^ { ExprGt(_, _) })
-      def p4: Parser[Expr] = chainl1(p5,
+      def b5: Parser[Expr] = chainl1(b6,
+        "<="  ^^^ { ExprLte(_, _) } |
+        "<"   ^^^ { ExprLt(_, _) } |
+        ">="  ^^^ { ExprGte(_, _) } |
+        ">"   ^^^ { ExprGt(_, _) })
+      def b6: Parser[Expr] = chainl1(b7,
         "+"   ^^^ { ExprAdd(_, _) } |
         "-"   ^^^ { ExprSub(_, _) })
-      def p5: Parser[Expr] = chainl1(p6,
+      def b7: Parser[Expr] = chainl1(mpr,
         "*"   ^^^ { ExprMul(_, _) } |
         "/"   ^^^ { ExprDiv(_, _) } |
         "%"   ^^^ { ExprMod(_, _) })
-      def p6 = scalar | "(" ~> bin <~ ")"
+      def mpr = scalar | "(" ~> ops <~ ")"
 
   import BinOps.*
 
   trait ExpressionParser extends OpsParser:
-    def expr: Parser[Expr] = bin | scalar
+    def expr: Parser[Expr] = ops | scalar
 
   trait StatementParser extends ExpressionParser:
     def stmt: Parser[Stmt] = echo | """.*\s""".r ^^ { StmtRaw(_) }
