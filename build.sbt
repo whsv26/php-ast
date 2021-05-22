@@ -17,7 +17,9 @@ lazy val root = project.in(file(".")).settings(
 //        ("io.circe" %% "circe-jawn"  % "0.13.0").withDottyCompat(scalaVersion.value),
 //        ("io.circe" %% "circe-derivation"  % "0.13.0-M5").withDottyCompat(scalaVersion.value),
     ),
-    
+
+    libraryDependencies += ("org.scala-lang.modules" %% "scala-parser-combinators" % "1.2.0-M2").withDottyCompat(scalaVersion.value),
+
     useScala3doc := true, 
     
     // To cross compile with Dotty and Scala 2

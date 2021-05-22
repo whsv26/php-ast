@@ -1,4 +1,4 @@
-package Lexer
+package whsv26.Lexer
 
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonNumber, JsonObject}
 import io.circe.parser.parse

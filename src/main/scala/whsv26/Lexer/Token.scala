@@ -1,4 +1,4 @@
-package Lexer
+package whsv26.Lexer
 
 object Token:
   case class PhpToken(t: PhpSimpleToken|PhpComplexToken, content: Option[String], line: Option[Int])
