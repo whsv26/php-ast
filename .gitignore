@@ -1,0 +1,19 @@
+.bsp
+
+# Artifacts from project building
+target/
+
+# Ignore SBT files
+.js
+.jvm
+.cache-main
+.cache-tests
+
+# Ignore project files for IntelliJ
+.idea/
+*.iml
+*.iws
+
+.bloop
+.metals
+.vscode

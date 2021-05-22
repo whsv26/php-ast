@@ -1,0 +1,6 @@
+# Utils to build build.sbt which is written in scala
+
+*
+!.gitignore
+!build.properties
+!plugins.sbt
