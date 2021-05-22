@@ -47,11 +47,17 @@ object Parser:
     def string = RegCond.string ^^ { (s) => ExprString(s.toString)}
 
   trait BinOpsParser extends ScalarParser:
-    def bin: Parser[Expr] = sum | mul | equal
-    def equal: Parser[Expr] = chainl1(brackets, "==" ^^^ { ExprAdd(_, _) } | "-" ^^^ { ExprSub(_, _) })
-    def sum: Parser[Expr] = chainl1(mul, "+" ^^^ { ExprAdd(_, _) } | "-" ^^^ { ExprSub(_, _) })
-    def mul: Parser[Expr] = chainl1(brackets, "*" ^^^ { ExprMul(_, _) } | "%" ^^^ { ExprMod(_, _) })
-    def brackets = scalar | "(" ~> bin <~ ")"
+    def bin: Parser[Expr] = p1 | p4
+    def p1: Parser[Expr] = chainl1(p2,
+      "=="  ^^^ { ExprEqual(_, _) } |
+      "===" ^^^ { ExprEqualStrict(_, _) })
+    def p2: Parser[Expr] = chainl1(p3,
+      "+"   ^^^ { ExprAdd(_, _) } |
+      "-"   ^^^ { ExprSub(_, _) })
+    def p3: Parser[Expr] = chainl1(p4,
+      "*"   ^^^ { ExprMul(_, _) } |
+      "%"   ^^^ { ExprMod(_, _) })
+    def p4 = scalar | "(" ~> bin <~ ")"
 
   trait ExpressionParser extends BinOpsParser:
     def expr: Parser[Expr] = bin | scalar
