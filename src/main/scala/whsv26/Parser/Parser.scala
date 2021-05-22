@@ -41,10 +41,12 @@ object Parser:
 
   object BinOps:
     import Scalar.*
-    case class ExprEqual(lhs: Expr, rhs: Expr) extends Expr
-    case class ExprEqualStrict(lhs: Expr, rhs: Expr) extends Expr
-    case class ExprNotEqual(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprAnd(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprOr(lhs: Expr, rhs: Expr) extends Expr
     case class ExprNotEqualStrict(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprNotEqual(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprEqualStrict(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprEqual(lhs: Expr, rhs: Expr) extends Expr
     case class ExprLte(lhs: Expr, rhs: Expr) extends Expr
     case class ExprLt(lhs: Expr, rhs: Expr) extends Expr
     case class ExprGte(lhs: Expr, rhs: Expr) extends Expr
@@ -52,32 +54,36 @@ object Parser:
     case class ExprAdd(lhs: Expr, rhs: Expr) extends Expr
     case class ExprSub(lhs: Expr, rhs: Expr) extends Expr
     case class ExprMul(lhs: Expr, rhs: Expr) extends Expr
-    case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
     case class ExprDiv(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
 
-    trait BinOpsParser extends ScalarParser:
+    trait OpsParser extends ScalarParser:
       def bin: Parser[Expr] = p1 | p4
       def p1: Parser[Expr] = chainl1(p2,
+        "&&" ^^^ { ExprAnd(_, _) } |
+        "||"  ^^^ { ExprOr(_, _) })
+      def p2: Parser[Expr] = chainl1(p3,
         "!==" ^^^ { ExprNotEqualStrict(_, _) } |
         "!="  ^^^ { ExprNotEqual(_, _) } |
         "===" ^^^ { ExprEqualStrict(_, _) } |
         "=="  ^^^ { ExprEqual(_, _) })
-      def p2: Parser[Expr] = chainl1(p3,
+      def p3: Parser[Expr] = chainl1(p4,
         "<=" ^^^ { ExprLte(_, _) } |
         "<"  ^^^ { ExprLt(_, _) } |
         ">=" ^^^ { ExprGte(_, _) } |
         ">"  ^^^ { ExprGt(_, _) })
-      def p3: Parser[Expr] = chainl1(p4,
+      def p4: Parser[Expr] = chainl1(p5,
         "+"   ^^^ { ExprAdd(_, _) } |
         "-"   ^^^ { ExprSub(_, _) })
-      def p4: Parser[Expr] = chainl1(p5,
+      def p5: Parser[Expr] = chainl1(p6,
         "*"   ^^^ { ExprMul(_, _) } |
+        "/"   ^^^ { ExprDiv(_, _) } |
         "%"   ^^^ { ExprMod(_, _) })
-      def p5 = scalar | "(" ~> bin <~ ")"
+      def p6 = scalar | "(" ~> bin <~ ")"
 
   import BinOps.*
 
-  trait ExpressionParser extends BinOpsParser:
+  trait ExpressionParser extends OpsParser:
     def expr: Parser[Expr] = bin | scalar
 
   trait StatementParser extends ExpressionParser:
