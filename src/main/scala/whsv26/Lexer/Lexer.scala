@@ -46,16 +46,24 @@ object Lexer:
 
   def computePositions(tokens: List[PhpToken]) =
     tokens
-      .foldLeft((0, Nil))((acc: (Int, List[PhpToken]), t: PhpToken) => {
+      .foldLeft((0, 1, Nil))((acc: (Int, Int, List[PhpToken]), t: PhpToken) => {
+        val content = t.atr.content
         val filePosStart = acc._1
-        val filePosEnd = filePosStart + t.atr.content.length
-        val positionedTokens = acc._2
-        val positionedAttrs = t.atr.copy(filePosStart = filePosStart, filePosEnd = filePosEnd)
+        val filePosEnd = filePosStart + content.length
+        val lineStart = acc._2
+        val lineEnd = lineStart + content.count(_ == '\n')
+        val positionedTokens = acc._3
+        val positionedAttrs = t.atr.copy(
+          lineStart = lineStart,
+          lineEnd = lineEnd,
+          filePosStart = filePosStart,
+          filePosEnd = filePosEnd
+        )
         val positionedToken = t.copy(atr = positionedAttrs)
 
-        (filePosEnd + 1, positionedToken :: positionedTokens)
+        (filePosEnd + 1, lineEnd, positionedToken :: positionedTokens)
       })
-      ._2
+      ._3
       .reverse
 
   def tokenize(path: String)(using decoder: Decoder[List[PhpToken]]) = {
