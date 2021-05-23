@@ -1,6 +1,6 @@
 <?php
 
-$tokens = token_get_all(file_get_contents('/home/whsv26/Documents/Projects/psalmd/src/main/php/stub.php'));
+$tokens = token_get_all(file_get_contents('/home/whsv26/Documents/Projects/php-ast/src/main/php/stub.php'));
 
 foreach ($tokens as &$token) {
     if (!is_array($token)) {

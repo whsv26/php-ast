@@ -3,7 +3,7 @@ package whsv26.Lexer
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonNumber, JsonObject}
 import io.circe.parser.parse
 import sys.process._
-import Token.*
+import Token.{PhpToken, SimpleToken, ComplexToken, PhpTokenAttributes, toPhpSimpleToken, toPhpComplexToken}
 
 object Lexer:
   object Codec:
@@ -16,17 +16,19 @@ object Lexer:
           def onNumber(value: JsonNumber): Option[PhpToken] = None
           def onObject(value: JsonObject): Option[PhpToken] = None
           def onString(value: String): Option[PhpToken] =
-            Token.toPhpSimpleToken(value).map((t: PhpSimpleToken) => PhpToken(t, None, None))
-          def onArray(value: Vector[Json]): Option[PhpToken] = for {
-            tokenJson      <- value.headOption
-            tokenString    <- tokenJson.asString
-            tokenEnm       <- Token.toPhpComplexToken(tokenString)
-            contentJson    <- value.tail.headOption
-            contentString  <- contentJson.asString
-            lineJson       <- value.tail.tail.headOption
-            lineJsonNumber <- lineJson.asNumber
-            lineInt        <- lineJsonNumber.toInt
-          } yield (PhpToken(tokenEnm, Some(contentString), Some(lineInt)))
+            toPhpSimpleToken(value).map((t: SimpleToken) => PhpToken(t, PhpTokenAttributes(SimpleToken.toString)))
+          def onArray(value: Vector[Json]): Option[PhpToken] =
+            val tuple = value.toList match
+              case token :: content :: line :: Nil => (token.asString, content.asString, line.asNumber)
+              case _ => (None, None, None)
+            for {
+              token      <- tuple._1
+              token      <- toPhpComplexToken(token)
+              content    <- tuple._2
+              line       <- tuple._3
+              line       <- line.toInt
+              attributes  = PhpTokenAttributes(content, line, line)
+            } yield (PhpToken(token, attributes))
 
         j.foldWith(folder).toRight(DecodingFailure("unable to parse token", j.hcursor.history))
       }
@@ -44,7 +46,7 @@ object Lexer:
 
   import Codec.{given, *}
 
-  def parseTokens(path: String)(using d: Decoder[List[PhpToken]]) = {
+  def tokenize(path: String)(using d: Decoder[List[PhpToken]]) = {
     for {
       j <- parse(s"""php ${path}""".!!)
       d <- d(j.hcursor)

@@ -1,7 +1,6 @@
 package whsv26.Parser
 
 import sys.process._
-import whsv26.Lexer.Token.PhpToken
 import whsv26.Parser.Parser.AstParser.{expr, rep}
 import whsv26.Parser.Parser.Expr
 
@@ -19,7 +18,7 @@ object Parser:
   case class ExprRaw(r: String) extends Expr
 
   // Statements
-  case class Ast(nodes: List[Node]) extends Stmt
+  case class Ast(nodes: List[Node]) extends Node
   case class StmtEcho(exprs: List[Expr]) extends Stmt
   case class StmtRaw(r: String) extends Stmt
 
