@@ -4,7 +4,6 @@ import cats.instances.option._
 import cats.syntax.apply._
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonNumber, JsonObject}
 import io.circe.parser.parse
-
 import sys.process._
 import Token.{ComplexToken, PhpToken, FilePos, SimpleToken, toPhpComplexToken, toPhpSimpleToken}
 
