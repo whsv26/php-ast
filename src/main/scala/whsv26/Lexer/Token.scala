@@ -23,6 +23,7 @@ object Token:
     case _ => None
 
   enum SimpleToken(s: String):
+    def content = s
     case T_OPEN_ROUND_BRACKETS extends SimpleToken("(")
     case T_CLOSE_ROUND_BRACKETS extends SimpleToken(")")
     case T_OPEN_CURLY_BRACKETS extends SimpleToken("{")
