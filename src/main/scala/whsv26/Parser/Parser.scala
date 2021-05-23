@@ -24,8 +24,8 @@ object Parser:
   case class StmtRaw(r: String) extends Stmt
 
   object RegCond:
-    val int = "[0-9]+".r
-    val float = """[0-9]+\.[0-9]*""".r
+    val int = "[0-9]+?".r
+    val float = """[0-9]+\.[0-9]*?""".r
     val string = """('|").*?('|")""".r
 
   object Scalar:
@@ -44,6 +44,7 @@ object Parser:
   object BinOps:
     import Scalar.*
     case class ExprTernCond(cond: Expr, lhs: Expr, rhs: Expr) extends Expr
+    case class ExprAssign(lhs: Expr, rhs: Expr) extends Expr
     case class ExprAnd(lhs: Expr, rhs: Expr) extends Expr
     case class ExprOr(lhs: Expr, rhs: Expr) extends Expr
     case class ExprNotEqualStrict(lhs: Expr, rhs: Expr) extends Expr
@@ -59,12 +60,16 @@ object Parser:
     case class ExprMul(lhs: Expr, rhs: Expr) extends Expr
     case class ExprDiv(lhs: Expr, rhs: Expr) extends Expr
     case class ExprMod(lhs: Expr, rhs: Expr) extends Expr
+    case class ExprNot(e: Expr) extends Expr
 
     trait OpsParser extends ScalarParser:
-      def ops: Parser[Expr] = tern | bin
-      def tern: Parser[Expr] = t1
+      def ops: Parser[Expr] = ternary | binary | unary
+      def unary: Parser[Expr] = u1
+      def u1: Parser[Expr] = "!" ~> mpr ^^ { ExprNot(_) }
+      def ternary: Parser[Expr] = t1
       def t1: Parser[Expr] = (mpr <~ "?") ~ (mpr <~ ":") ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
-      def bin: Parser[Expr] = b2
+      def binary: Parser[Expr] = b1
+      def b1: Parser[Expr] = chainl1(b2, "=" ^^^ { ExprAssign(_, _) })
       def b2: Parser[Expr] = chainl1(b3, "||" ^^^ { ExprOr(_, _) })
       def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ { ExprAnd(_, _) })
       def b4: Parser[Expr] = chainl1(b5,
