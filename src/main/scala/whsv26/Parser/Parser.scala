@@ -68,26 +68,26 @@ object Parser:
       def ternary: Parser[Expr] = t1
       def t1: Parser[Expr] = (mpr <~ "?") ~ (mpr <~ ":") ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
       def binary: Parser[Expr] = b1
-      def b1: Parser[Expr] = chainl1(b2, "=" ^^^ { ExprAssign(_, _) })
-      def b2: Parser[Expr] = chainl1(b3, "||" ^^^ { ExprOr(_, _) })
-      def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ { ExprAnd(_, _) })
+      def b1: Parser[Expr] = chainl1(b2, "=" ^^^ ExprAssign.apply)
+      def b2: Parser[Expr] = chainl1(b3, "||" ^^^ ExprOr.apply)
+      def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ ExprAnd.apply)
       def b4: Parser[Expr] = chainl1(b5,
-        "!==" ^^^ { ExprNotEqualStrict(_, _) } |
-        "!="  ^^^ { ExprNotEqual(_, _) } |
-        "===" ^^^ { ExprEqualStrict(_, _) } |
-        "=="  ^^^ { ExprEqual(_, _) })
+        "!==" ^^^ ExprNotEqualStrict.apply |
+        "!="  ^^^ ExprNotEqual.apply |
+        "===" ^^^ ExprEqualStrict.apply |
+        "=="  ^^^ ExprEqual.apply)
       def b5: Parser[Expr] = chainl1(b6,
-        "<="  ^^^ { ExprLte(_, _) } |
-        "<"   ^^^ { ExprLt(_, _) } |
-        ">="  ^^^ { ExprGte(_, _) } |
-        ">"   ^^^ { ExprGt(_, _) })
+        "<="  ^^^ ExprLte.apply |
+        "<"   ^^^ ExprLt.apply |
+        ">="  ^^^ ExprGte.apply |
+        ">"   ^^^ ExprGt.apply)
       def b6: Parser[Expr] = chainl1(b7,
-        "+"   ^^^ { ExprAdd(_, _) } |
-        "-"   ^^^ { ExprSub(_, _) })
+        "+"   ^^^ ExprAdd.apply |
+        "-"   ^^^ ExprSub.apply)
       def b7: Parser[Expr] = chainl1(mpr,
-        "*"   ^^^ { ExprMul(_, _) } |
-        "/"   ^^^ { ExprDiv(_, _) } |
-        "%"   ^^^ { ExprMod(_, _) })
+        "*"   ^^^ ExprMul.apply |
+        "/"   ^^^ ExprDiv.apply |
+        "%"   ^^^ ExprMod.apply)
       def mpr = scalar | "(" ~> ops <~ ")"
 
   import BinOps.*
