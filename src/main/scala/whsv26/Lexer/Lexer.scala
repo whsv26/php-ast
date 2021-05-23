@@ -1,5 +1,7 @@
 package whsv26.Lexer
 
+import cats.instances.option._
+import cats.syntax.apply._
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonNumber, JsonObject}
 import io.circe.parser.parse
 import sys.process._
@@ -18,17 +20,14 @@ object Lexer:
           def onString(value: String): Option[PhpToken] =
             toPhpSimpleToken(value).map((t: SimpleToken) => PhpToken(t, PhpTokenAttributes(SimpleToken.toString)))
           def onArray(value: Vector[Json]): Option[PhpToken] =
+            val castToken = (_: Json).asString.flatMap(toPhpComplexToken)
+            val castContent = (_: Json).asString
+            val castLine = (_: Json).asNumber.flatMap(_.toInt)
             val tuple = value.toList match
-              case token :: content :: line :: Nil => (token.asString, content.asString, line.asNumber)
+              case t :: c :: l :: Nil => (castToken(t), castContent(c), castLine(l))
               case _ => (None, None, None)
-            for {
-              token      <- tuple._1
-              token      <- toPhpComplexToken(token)
-              content    <- tuple._2
-              line       <- tuple._3
-              line       <- line.toInt
-              attributes  = PhpTokenAttributes(content, line, line)
-            } yield (PhpToken(token, attributes))
+
+            tuple.mapN((token, content, line) => PhpToken(token, PhpTokenAttributes(content, line, line)))
 
         j.foldWith(folder).toRight(DecodingFailure("unable to parse token", j.hcursor.history))
       }
