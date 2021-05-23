@@ -6,7 +6,7 @@ import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json, JsonNumber, J
 import io.circe.parser.parse
 
 import sys.process._
-import Token.{ComplexToken, PhpToken, PhpTokenAttributes, SimpleToken, toPhpComplexToken, toPhpSimpleToken}
+import Token.{ComplexToken, PhpToken, FilePos, SimpleToken, toPhpComplexToken, toPhpSimpleToken}
 
 object Lexer:
   object Codec:
@@ -19,7 +19,7 @@ object Lexer:
           def onNumber(value: JsonNumber): Option[PhpToken] = None
           def onObject(value: JsonObject): Option[PhpToken] = None
           def onString(value: String): Option[PhpToken] =
-            toPhpSimpleToken(value).map((t: SimpleToken) => PhpToken(t, PhpTokenAttributes(t.content)))
+            toPhpSimpleToken(value).map((t: SimpleToken) => PhpToken(t, t.content))
           def onArray(value: Vector[Json]): Option[PhpToken] =
             val castToken = (_: Json).asString.flatMap(toPhpComplexToken)
             val castContent = (_: Json).asString
@@ -28,7 +28,7 @@ object Lexer:
               case t :: c :: l :: Nil => (castToken(t), castContent(c), castLine(l))
               case _ => (None, None, None)
 
-            tuple.mapN((token, content, line) => PhpToken(token, PhpTokenAttributes(content, line, line)))
+            tuple.mapN((token, content, line) => PhpToken(token, content))
 
         j.foldWith(folder).toRight(DecodingFailure("unable to parse token", j.hcursor.history))
       }
@@ -47,21 +47,14 @@ object Lexer:
   def computePositions(tokens: List[PhpToken]) =
     tokens
       .foldLeft((0, 1, Nil))((acc: (Int, Int, List[PhpToken]), t: PhpToken) => {
-        val content = t.atr.content
-        val filePosStart = acc._1
-        val filePosEnd = filePosStart + content.length
+        val posStart = acc._1
+        val posEnd = posStart + t.content.length
         val lineStart = acc._2
-        val lineEnd = lineStart + content.count(_ == '\n')
+        val lineEnd = lineStart + t.content.count(_ == '\n')
         val positionedTokens = acc._3
-        val positionedAttrs = t.atr.copy(
-          lineStart = lineStart,
-          lineEnd = lineEnd,
-          filePosStart = filePosStart,
-          filePosEnd = filePosEnd
-        )
-        val positionedToken = t.copy(atr = positionedAttrs)
+        val positionedToken = t.copy(pos = FilePos(lineStart, lineEnd, posStart, posEnd))
 
-        (filePosEnd + 1, lineEnd, positionedToken :: positionedTokens)
+        (posEnd + 1, lineEnd, positionedToken :: positionedTokens)
       })
       ._3
       .reverse

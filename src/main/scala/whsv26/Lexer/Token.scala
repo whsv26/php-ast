@@ -3,8 +3,8 @@ package whsv26.Lexer
 import scala.util.Try
 
 object Token:
-  case class PhpTokenAttributes(content: String, lineStart: Int = -1, lineEnd: Int = -1, filePosStart: Int = -1, filePosEnd: Int = -1)
-  case class PhpToken(t: SimpleToken|ComplexToken, atr: PhpTokenAttributes)
+  case class FilePos(lineStart: Int = -1, lineEnd: Int = -1, posStart: Int = -1, posEnd: Int = -1)
+  case class PhpToken(t: SimpleToken|ComplexToken, content: String, pos: FilePos = FilePos())
 
   def toPhpComplexToken(s: String) = Try({ ComplexToken.valueOf(s) }).toOption
   def toPhpSimpleToken(s: String) = s match
