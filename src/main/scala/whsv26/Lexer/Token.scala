@@ -21,6 +21,7 @@ object Token:
     case "=" => Some(SimpleToken.T_ASSIGN)
     case "?" => Some(SimpleToken.T_QUESTION)
     case "+" => Some(SimpleToken.T_PLUS)
+    case "!" => Some(SimpleToken.T_EXCL)
     case _ => None
 
   enum SimpleToken(s: String):
@@ -38,6 +39,7 @@ object Token:
     case T_ASSIGN extends SimpleToken("=")
     case T_QUESTION extends SimpleToken("?")
     case T_PLUS extends SimpleToken("+")
+    case T_EXCL extends SimpleToken("!")
 
   enum ComplexToken:
     case T_ABSTRACT

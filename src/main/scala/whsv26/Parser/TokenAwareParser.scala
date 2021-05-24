@@ -46,6 +46,9 @@ trait TokenAwareParser extends Parsers:
   def T_SEMICOLON = acceptToken(SimpleToken.T_SEMICOLON)
   def T_ASSIGN = acceptToken(SimpleToken.T_ASSIGN)
   def T_QUESTION = acceptToken(SimpleToken.T_QUESTION)
+  def T_PLUS = acceptToken(SimpleToken.T_PLUS)
+  def T_EXCL = acceptToken(SimpleToken.T_EXCL)
+
   def T_ABSTRACT = acceptToken(ComplexToken.T_ABSTRACT)
   def T_AND_EQUAL = acceptToken(ComplexToken.T_AND_EQUAL)
   def T_ARRAY = acceptToken(ComplexToken.T_ARRAY)

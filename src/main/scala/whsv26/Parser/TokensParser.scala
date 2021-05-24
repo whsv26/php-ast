@@ -23,15 +23,15 @@ object TokensParser extends TokenAwareParser:
 
 
 
-  def ast: Parser[Ast] = T_OPEN_TAG ~> T_WHITESPACE ~> rep(stmt) <~ opt(T_CLOSE_TAG) ^^ { case stmts => Ast(stmts)}
-  def stmt: Parser[Stmt] = echo
-  def expr: Parser[Expr] = opt(T_WHITESPACE) ~> scalar <~ opt(T_WHITESPACE)
-  def echo: Parser[StmtEcho] = T_ECHO ~> T_WHITESPACE ~> repsep(expr, T_COMMA) <~ T_SEMICOLON ^^ { case exprs => StmtEcho(exprs) }
+  def ast = T_OPEN_TAG ~> T_WHITESPACE ~> rep(stmt) <~ opt(T_CLOSE_TAG) ^^ { case stmts => Ast(stmts)}
+  def stmt = echo
+  def expr = opt(T_WHITESPACE) ~> (scalar | operator) <~ opt(T_WHITESPACE)
+  def echo = T_ECHO ~> T_WHITESPACE ~> repsep(expr, T_COMMA) <~ T_SEMICOLON ^^ { case exprs => StmtEcho(exprs) }
 
 
-  def ops: Parser[Expr] = ternary | binary | unary
+  def operator: Parser[Expr] = ternary | binary | unary
   def unary: Parser[Expr] = u1
-  def u1: Parser[Expr] = "!" ~> mpr ^^ { ExprNot(_) }
+  def u1: Parser[Expr] = repN(2, T_EXCL) ~> mpr | T_EXCL ~> mpr ^^ ExprNot.apply
   def ternary: Parser[Expr] = t1
   def t1: Parser[Expr] = (mpr <~ "?") ~ (mpr <~ ":") ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
   def binary: Parser[Expr] = b1
@@ -40,22 +40,22 @@ object TokensParser extends TokenAwareParser:
   def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ ExprAnd.apply)
   def b4: Parser[Expr] = chainl1(b5,
     "!==" ^^^ ExprNotEqualStrict.apply |
-      "!="  ^^^ ExprNotEqual.apply |
-      "===" ^^^ ExprEqualStrict.apply |
-      "=="  ^^^ ExprEqual.apply)
+    "!="  ^^^ ExprNotEqual.apply |
+    "===" ^^^ ExprEqualStrict.apply |
+    "=="  ^^^ ExprEqual.apply)
   def b5: Parser[Expr] = chainl1(b6,
     "<="  ^^^ ExprLte.apply |
-      "<"   ^^^ ExprLt.apply |
-      ">="  ^^^ ExprGte.apply |
-      ">"   ^^^ ExprGt.apply)
+    "<"   ^^^ ExprLt.apply |
+    ">="  ^^^ ExprGte.apply |
+    ">"   ^^^ ExprGt.apply)
   def b6: Parser[Expr] = chainl1(b7,
     "+"   ^^^ ExprAdd.apply |
-      "-"   ^^^ ExprSub.apply)
+    "-"   ^^^ ExprSub.apply)
   def b7: Parser[Expr] = chainl1(mpr,
     "*"   ^^^ ExprMul.apply |
-      "/"   ^^^ ExprDiv.apply |
-      "%"   ^^^ ExprMod.apply)
-  def mpr = scalar | "(" ~> ops <~ ")"
+    "/"   ^^^ ExprDiv.apply |
+    "%"   ^^^ ExprMod.apply)
+  def mpr: Parser[Expr] = scalar | "(" ~> operator <~ ")"
 
 
 
