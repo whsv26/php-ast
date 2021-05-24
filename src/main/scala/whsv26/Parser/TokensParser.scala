@@ -30,32 +30,32 @@ object TokensParser extends TokenAwareParser:
 
 
   def operator: Parser[Expr] = ternary | binary | unary
-  def unary: Parser[Expr] = u1
-  def u1: Parser[Expr] = repN(2, T_EXCL) ~> mpr | T_EXCL ~> mpr ^^ ExprNot.apply
-  def ternary: Parser[Expr] = t1
-  def t1: Parser[Expr] = (mpr <~ "?") ~ (mpr <~ ":") ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
-  def binary: Parser[Expr] = b1
-  def b1: Parser[Expr] = chainl1(b2, "=" ^^^ ExprAssign.apply)
-  def b2: Parser[Expr] = chainl1(b3, "||" ^^^ ExprOr.apply)
-  def b3: Parser[Expr] = chainl1(b4, "&&" ^^^ ExprAnd.apply)
-  def b4: Parser[Expr] = chainl1(b5,
-    "!==" ^^^ ExprNotEqualStrict.apply |
-    "!="  ^^^ ExprNotEqual.apply |
-    "===" ^^^ ExprEqualStrict.apply |
-    "=="  ^^^ ExprEqual.apply)
-  def b5: Parser[Expr] = chainl1(b6,
-    "<="  ^^^ ExprLte.apply |
-    "<"   ^^^ ExprLt.apply |
-    ">="  ^^^ ExprGte.apply |
-    ">"   ^^^ ExprGt.apply)
-  def b6: Parser[Expr] = chainl1(b7,
-    "+"   ^^^ ExprAdd.apply |
-    "-"   ^^^ ExprSub.apply)
-  def b7: Parser[Expr] = chainl1(mpr,
-    "*"   ^^^ ExprMul.apply |
-    "/"   ^^^ ExprDiv.apply |
-    "%"   ^^^ ExprMod.apply)
-  def mpr: Parser[Expr] = scalar | "(" ~> operator <~ ")"
+  def unary = u1
+  def u1 = repN(2, T_EXCL) ~> mpr | T_EXCL ~> mpr ^^ ExprNot.apply
+  def ternary = t1
+  def t1 = (mpr <~ T_QUESTION) ~ (mpr <~ T_COLON) ~ mpr ^^ { case c ~ l ~ r => ExprTernCond(c, l, r) }
+  def binary = b1
+  def b1 = chainl1(b2, T_ASSIGN ^^^ ExprAssign.apply)
+  def b2 = chainl1(b3, T_BOOLEAN_OR ^^^ ExprOr.apply)
+  def b3 = chainl1(b4, T_BOOLEAN_AND ^^^ ExprAnd.apply)
+  def b4 = chainl1(b5,
+    T_IS_NOT_IDENTICAL ^^^ ExprNotEqualStrict.apply |
+    T_IS_NOT_EQUAL  ^^^ ExprNotEqual.apply |
+    T_IS_IDENTICAL ^^^ ExprEqualStrict.apply |
+    T_IS_EQUAL  ^^^ ExprEqual.apply)
+  def b5 = chainl1(b6,
+    T_IS_SMALLER_OR_EQUAL ^^^ ExprLte.apply |
+    T_IS_SMALLER          ^^^ ExprLt.apply |
+    T_IS_GREATER_OR_EQUAL ^^^ ExprGte.apply |
+    T_IS_GREATER          ^^^ ExprGt.apply)
+  def b6 = chainl1(b7,
+    T_PLUS  ^^^ ExprAdd.apply |
+    T_MINUS ^^^ ExprSub.apply)
+  def b7 = chainl1(mpr,
+    T_ASTERISK ^^^ ExprMul.apply |
+    T_SLASH    ^^^ ExprDiv.apply |
+    T_PERCENT  ^^^ ExprMod.apply)
+  def mpr = scalar | T_OPEN_ROUND_BRACKETS ~> operator <~ T_CLOSE_ROUND_BRACKETS
 
 
 

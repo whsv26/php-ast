@@ -1,3 +1,3 @@
 <?php
 
-echo !!true;
+echo 1 < 2;

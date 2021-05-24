@@ -21,7 +21,13 @@ object Token:
     case "=" => Some(SimpleToken.T_ASSIGN)
     case "?" => Some(SimpleToken.T_QUESTION)
     case "+" => Some(SimpleToken.T_PLUS)
+    case "-" => Some(SimpleToken.T_MINUS)
     case "!" => Some(SimpleToken.T_EXCL)
+    case "<" => Some(SimpleToken.T_IS_SMALLER)
+    case ">" => Some(SimpleToken.T_IS_GREATER)
+    case "*" => Some(SimpleToken.T_ASTERISK)
+    case "/" => Some(SimpleToken.T_SLASH)
+    case "%" => Some(SimpleToken.T_PERCENT)
     case _ => None
 
   enum SimpleToken(s: String):
@@ -39,7 +45,13 @@ object Token:
     case T_ASSIGN extends SimpleToken("=")
     case T_QUESTION extends SimpleToken("?")
     case T_PLUS extends SimpleToken("+")
+    case T_MINUS extends SimpleToken("-")
     case T_EXCL extends SimpleToken("!")
+    case T_IS_SMALLER extends SimpleToken("<")
+    case T_IS_GREATER extends SimpleToken(">")
+    case T_ASTERISK extends SimpleToken("*")
+    case T_SLASH extends SimpleToken("/")
+    case T_PERCENT extends SimpleToken("%")
 
   enum ComplexToken:
     case T_ABSTRACT
