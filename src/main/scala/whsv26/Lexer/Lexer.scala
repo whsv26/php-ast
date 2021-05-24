@@ -29,7 +29,7 @@ object Lexer:
 
             tuple.mapN((token, content, line) => PhpToken(token, content))
 
-        j.foldWith(folder).toRight(DecodingFailure("unable to parse token", j.hcursor.history))
+        j.foldWith(folder).toRight(DecodingFailure("unable to parse token " + j, j.hcursor.history))
       }
 
     given (using d: Decoder[PhpToken]): Decoder[List[PhpToken]] with
@@ -39,7 +39,7 @@ object Lexer:
 
         listOfDecoded.partitionMap(identity) match
           case (Nil, rights) => Right(rights)
-          case (lefts, _) => Left(DecodingFailure("unable to parse token list", c.history))
+          case (lefts, _) => Left(DecodingFailure(lefts.toString(), c.history))
 
   import Codec.{given, *}
 

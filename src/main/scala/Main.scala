@@ -12,8 +12,9 @@ import Lexer.Codec.{given, *}
 
   val tokens: Either[Throwable, List[PhpToken]] = Lexer.tokenize(path)
   val ts = tokens.getOrElse(Nil)
-  val reader = PhpTokenReader(PhpToken(ComplexToken.T_STRING, "true") :: Nil)
-  val parsed = TokensParser.parse(reader)
+  println(ts)
+//  val ts1 = PhpToken(ComplexToken.T_STRING, "true") :: Nil
+  val parsed = TokensParser.parse(PhpTokenReader(ts))
 
   println(parsed)
 
