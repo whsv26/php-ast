@@ -1,8 +1,12 @@
 package whsv26.Lexer
 
+import cats.Show
+
 import scala.util.Try
 
 object Token:
+  given Show[PhpToken] = Show.show((token: PhpToken) => token.t.toString)
+
   case class FilePos(lineStart: Int = -1, lineEnd: Int = -1, posStart: Int = -1, posEnd: Int = -1)
   case class PhpToken(t: SimpleToken|ComplexToken, content: String, pos: FilePos = FilePos())
 

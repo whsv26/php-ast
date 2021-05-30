@@ -1,7 +1,12 @@
 package whsv26.Parser
 
+import cats.Show
 import whsv26.Lexer.Token.{ComplexToken, PhpToken, SimpleToken}
+import whsv26.Parser.Node.Expression.ExprRaw
+import whsv26.Parser.Node.Expression.Expr
 import whsv26.Parser.TokensParser.{Input, Success, accept}
+
+import scala.collection.mutable.ListBuffer
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
@@ -31,6 +36,21 @@ trait TokenAwareParser extends Parsers:
           Failure("'"+s+"' expected", in.rest)
         }
       }
+
+  def debugParser(using s: Show[PhpToken]) = new Parser[String]:
+    def apply(in: Input) = {
+      val buffer: ListBuffer[PhpToken] = ListBuffer()
+      var inp = in
+
+      while (!inp.atEnd) {
+        buffer += inp.first
+        inp = inp.rest
+      }
+
+      val reduced = buffer.map(s.show(_)).reduceOption(_ + "," +  _)
+      Success(reduced.getOrElse(""), in.rest)
+    }
+
 
   def acceptToken(token: SimpleToken|ComplexToken) = accept(token.toString, { case t @ PhpToken(_: token.type, _, _) => t })
 

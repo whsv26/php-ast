@@ -10,6 +10,7 @@ object Node:
 
   object Expression:
     sealed trait Expr extends Node
+    case class ExprRaw(r: String) extends Expr
 
     sealed trait ExprScalar extends Expr
     case class ExprBool(r: Boolean) extends ExprScalar

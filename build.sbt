@@ -2,7 +2,7 @@ val scala2Version = "2.13.4"
 val scala3Version = "3.0.0-RC1"
 
 lazy val root = project.in(file(".")).settings(
-    name := "psalmd",
+    name := "php-ast",
     version := "0.1.0",
     scalaVersion := scala3Version,
 
